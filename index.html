@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Southern African Fish Quiz</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0284c7">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Fish Quiz">
+
   <style>
     * {
       box-sizing: border-box;
@@ -47,12 +55,35 @@
       border-radius: 16px;
       overflow: hidden;
       border: 3px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .img-box img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
+    }
+    .img-placeholder {
+      text-align: center;
+      color: #475569;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 16px;
+    }
+    .img-placeholder .icon {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .photo-credit {
+      font-size: 0.85rem;
+      text-align: center;
+      color: #64748b;
+    }
+    .photo-credit a {
+      color: #0284c7;
     }
     .question-prompt {
       font-size: 1.4rem;
@@ -103,6 +134,12 @@
       border-radius: 14px;
       cursor: pointer;
     }
+    #app-footer {
+      font-size: 0.8rem;
+      text-align: center;
+      color: #94a3b8;
+      padding-top: 8px;
+    }
   </style>
 </head>
 <body>
@@ -113,9 +150,10 @@
     <span id="habitat-badge" class="badge">Inland</span>
   </div>
 
-  <div class="img-box">
-    <img id="fish-img" src="" alt="Fish photo" referrerpolicy="no-referrer">
+  <div class="img-box" id="img-box">
+    <img id="fish-img" src="" alt="A fish for you to identify" style="display:none;">
   </div>
+  <div id="photo-credit" class="photo-credit"></div>
 
   <div class="question-prompt">What fish is this?</div>
 
@@ -124,63 +162,152 @@
   <div id="feedback"></div>
 
   <button id="next-btn" onclick="nextCard()">Next Fish →</button>
+
+  <div id="app-footer">Fish photos © their respective Wikimedia Commons photographers, used under Creative Commons licenses. Tap a photo credit link above for details.</div>
 </div>
 
 <script>
+  // Each card lists a preferred local image (fast, hosted in this repo) and an
+  // optional fallback + credit link to the original Wikimedia Commons photo.
+  // If you upload a matching file into /images (see README), the local copy
+  // is used automatically — no code change needed.
   const deck = [
     {
       name: "Tigerfish",
       habitat: "🏞️ Inland Freshwater",
-      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Hydrocynus_vittatus_15808090.jpg?width=600",
-      options: ["Tigerfish", "Galjoen", "Tilapia", "Carp"]
+      image: "images/tigerfish.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Hydrocynus_vittatus_15808090.jpg?width=600",
+      credit: "https://commons.wikimedia.org/wiki/File:Hydrocynus_vittatus_15808090.jpg"
     },
     {
       name: "Galjoen",
       habitat: "🌊 Ocean Coastal",
-      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Galjoen_(Dichistius_capensis).jpg?width=600",
-      options: ["Galjoen", "Snoek", "Blacktail", "Yellowtail"]
+      image: "images/galjoen.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Galjoen_(Dichistius_capensis).jpg?width=600",
+      credit: "https://commons.wikimedia.org/wiki/File:Galjoen_(Dichistius_capensis).jpg"
     },
     {
       name: "Snoek",
       habitat: "🌊 Ocean Pelagic",
-      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Thyrsites_atun,_Barracouta_or_snake_Mackerel.jpg?width=600",
-      options: ["Snoek", "Kingklip", "Barracuda", "Hake"]
+      image: "images/snoek.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Thyrsites_atun,_Barracouta_or_snake_Mackerel.jpg?width=600",
+      credit: "https://commons.wikimedia.org/wiki/File:Thyrsites_atun,_Barracouta_or_snake_Mackerel.jpg"
     },
     {
-      name: "Sharptooth Catfish (Barbel)",
+      name: "Sharptooth Catfish",
       habitat: "🏞️ Inland Freshwater",
-      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Clarias_gariepinus,_African_sharptooth_catfish.jpg?width=600",
-      options: ["Sharptooth Catfish", "Tigerfish", "Mudfish", "Vundu"]
+      image: "images/catfish.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Clarias_gariepinus,_African_sharptooth_catfish.jpg?width=600",
+      credit: "https://commons.wikimedia.org/wiki/File:Clarias_gariepinus,_African_sharptooth_catfish.jpg"
     },
     {
       name: "Red Roman",
       habitat: "🌊 Ocean Reef",
-      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Roman_Chrysoblephus_laticeps_DSC02776.JPG?width=600",
-      options: ["Red Roman", "Cape Salmon", "Galjoen", "Red Stumpnose"]
+      image: "images/roman.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Roman_Chrysoblephus_laticeps_DSC02776.JPG?width=600",
+      credit: "https://commons.wikimedia.org/wiki/File:Roman_Chrysoblephus_laticeps_DSC02776.JPG"
     },
     {
       name: "Spotted Grunter",
       habitat: "🌊 Estuary & Ocean",
-      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Pomadasys_commersonnii,_Breede_river_mouth.jpg?width=600",
-      options: ["Spotted Grunter", "Kabeljou / Kob", "Garrick", "Steenbras"]
+      image: "images/grunter.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Pomadasys_commersonnii,_Breede_river_mouth.jpg?width=600",
+      credit: "https://commons.wikimedia.org/wiki/File:Pomadasys_commersonnii,_Breede_river_mouth.jpg"
     }
   ];
 
+  // More species, ready to go: once you've uploaded a photo to /images with
+  // the filename listed here, cut the entry from this list and paste it into
+  // `deck` above (see README "Adding more fish" for the full checklist).
+  //
+  // const pendingSpecies = [
+  //   { name: "Cape Yellowtail",        habitat: "🌊 Ocean Pelagic",         image: "images/yellowtail.jpg" },
+  //   { name: "Kob (Kabeljou)",         habitat: "🌊 Estuary & Ocean",       image: "images/kob.jpg" },
+  //   { name: "White Steenbras",        habitat: "🌊 Ocean Coastal",         image: "images/steenbras.jpg" },
+  //   { name: "Garrick (Leervis)",      habitat: "🌊 Estuary & Ocean",       image: "images/garrick.jpg" },
+  //   { name: "Blacktail",              habitat: "🌊 Ocean Coastal",         image: "images/blacktail.jpg" },
+  //   { name: "Geelbek (Cape Salmon)",  habitat: "🌊 Ocean Coastal",         image: "images/geelbek.jpg" },
+  //   { name: "Largemouth Yellowfish",  habitat: "🏞️ Inland Freshwater",    image: "images/yellowfish.jpg" },
+  //   { name: "Mozambique Tilapia",     habitat: "🏞️ Inland Freshwater",    image: "images/tilapia.jpg" },
+  //   { name: "Vundu Catfish",          habitat: "🏞️ Inland Freshwater",    image: "images/vundu.jpg" },
+  //   { name: "Kingklip",               habitat: "🌊 Ocean Deep-water",      image: "images/kingklip.jpg" },
+  //   { name: "Cape Hake",              habitat: "🌊 Ocean Deep-water",      image: "images/hake.jpg" },
+  //   { name: "Shad (Elf)",             habitat: "🌊 Ocean Coastal",         image: "images/shad.jpg" },
+  //   { name: "Cape Stumpnose",         habitat: "🌊 Estuary & Ocean",       image: "images/stumpnose.jpg" },
+  //   { name: "Longfin Eel",            habitat: "🏞️ Inland Freshwater / Estuary", image: "images/eel.jpg" }
+  // ];
+
   let currentIndex = 0;
   let score = 0;
+  const preloadedImages = []; // keep references so the browser can't garbage-collect them early
+
+  function shuffle(array) {
+    const copy = array.slice();
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  // Builds this card's 4 choices from the correct name plus 3 random distractors
+  // pulled from the rest of the deck, shuffled into a new order each time.
+  function buildOptions(card) {
+    const others = deck.filter(c => c.name !== card.name).map(c => c.name);
+    const distractors = shuffle(others).slice(0, 3);
+    return shuffle([card.name, ...distractors]);
+  }
+
+  function preloadImages() {
+    deck.forEach(card => {
+      const img = new Image();
+      img.src = card.image;
+      preloadedImages.push(img);
+    });
+  }
+
+  // Tries the local photo first, falls back to the Commons hotlink if that's
+  // missing, and finally shows a plain placeholder rather than a broken-image icon.
+  function setCardImage(card) {
+    const imgEl = document.getElementById("fish-img");
+    const boxEl = document.getElementById("img-box");
+    const creditEl = document.getElementById("photo-credit");
+    const existingPlaceholder = boxEl.querySelector(".img-placeholder");
+    if (existingPlaceholder) existingPlaceholder.remove();
+
+    creditEl.innerHTML = card.credit
+      ? `Photo: <a href="${card.credit}" target="_blank" rel="noopener">Wikimedia Commons</a> — tap for photographer & license`
+      : "";
+
+    let stage = "local";
+    imgEl.style.display = "block";
+    imgEl.onerror = () => {
+      if (stage === "local" && card.fallback) {
+        stage = "fallback";
+        imgEl.src = card.fallback;
+      } else {
+        imgEl.style.display = "none";
+        const placeholder = document.createElement("div");
+        placeholder.className = "img-placeholder";
+        placeholder.innerHTML = `<span class="icon">📷</span>Photo coming soon`;
+        boxEl.appendChild(placeholder);
+      }
+    };
+    imgEl.src = card.image;
+  }
 
   function loadCard() {
     const card = deck[currentIndex];
     document.getElementById("progress-text").innerText = `Fish ${currentIndex + 1} of ${deck.length}`;
     document.getElementById("habitat-badge").innerText = card.habitat;
-    document.getElementById("fish-img").src = card.image;
+    setCardImage(card);
     document.getElementById("feedback").innerText = "";
     document.getElementById("next-btn").style.display = "none";
 
     const container = document.getElementById("options-container");
     container.innerHTML = "";
 
-    card.options.forEach(opt => {
+    buildOptions(card).forEach(opt => {
       const btn = document.createElement("button");
       btn.className = "choice-btn";
       btn.innerText = opt;
@@ -242,6 +369,7 @@
     `;
   }
 
+  preloadImages();
   loadCard();
 </script>
 </body>
