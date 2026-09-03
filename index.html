@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Southern African Fish Quiz</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      display: flex;
+      justify-content: center;
+      padding: 12px;
+    }
+    #game-container {
+      width: 100%;
+      max-width: 450px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+    .badge {
+      background: #e2e8f0;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #334155;
+    }
+    .img-box {
+      width: 100%;
+      height: 220px;
+      background-color: #cbd5e1;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 3px solid #334155;
+    }
+    .img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .question-prompt {
+      font-size: 1.4rem;
+      font-weight: 800;
+      text-align: center;
+    }
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .choice-btn {
+      min-height: 64px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #0f172a;
+      background-color: #ffffff;
+      border: 3px solid #475569;
+      border-radius: 14px;
+      padding: 10px 16px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .choice-btn.correct {
+      background-color: #bbf7d0 !important;
+      border-color: #15803d !important;
+      color: #14532d !important;
+    }
+    .choice-btn.wrong {
+      background-color: #fecaca !important;
+      border-color: #b91c1c !important;
+      color: #7f1d1d !important;
+    }
+    #feedback {
+      min-height: 32px;
+      font-size: 1.25rem;
+      font-weight: 800;
+      text-align: center;
+    }
+    #next-btn {
+      display: none;
+      min-height: 65px;
+      background-color: #0284c7;
+      color: #ffffff;
+      font-size: 1.4rem;
+      font-weight: 800;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <div class="header">
+    <span id="progress-text">Fish 1 of 6</span>
+    <span id="habitat-badge" class="badge">Inland</span>
+  </div>
+
+  <div class="img-box">
+    <img id="fish-img" src="" alt="Fish photo" referrerpolicy="no-referrer">
+  </div>
+
+  <div class="question-prompt">What fish is this?</div>
+
+  <div class="options-grid" id="options-container"></div>
+
+  <div id="feedback"></div>
+
+  <button id="next-btn" onclick="nextCard()">Next Fish →</button>
+</div>
+
+<script>
+  const deck = [
+    {
+      name: "Tigerfish",
+      habitat: "🏞️ Inland Freshwater",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Hydrocynus_vittatus_15808090.jpg?width=600",
+      options: ["Tigerfish", "Galjoen", "Tilapia", "Carp"]
+    },
+    {
+      name: "Galjoen",
+      habitat: "🌊 Ocean Coastal",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Galjoen_(Dichistius_capensis).jpg?width=600",
+      options: ["Galjoen", "Snoek", "Blacktail", "Yellowtail"]
+    },
+    {
+      name: "Snoek",
+      habitat: "🌊 Ocean Pelagic",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Thyrsites_atun,_Barracouta_or_snake_Mackerel.jpg?width=600",
+      options: ["Snoek", "Kingklip", "Barracuda", "Hake"]
+    },
+    {
+      name: "Sharptooth Catfish (Barbel)",
+      habitat: "🏞️ Inland Freshwater",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Clarias_gariepinus,_African_sharptooth_catfish.jpg?width=600",
+      options: ["Sharptooth Catfish", "Tigerfish", "Mudfish", "Vundu"]
+    },
+    {
+      name: "Red Roman",
+      habitat: "🌊 Ocean Reef",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Roman_Chrysoblephus_laticeps_DSC02776.JPG?width=600",
+      options: ["Red Roman", "Cape Salmon", "Galjoen", "Red Stumpnose"]
+    },
+    {
+      name: "Spotted Grunter",
+      habitat: "🌊 Estuary & Ocean",
+      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Pomadasys_commersonnii,_Breede_river_mouth.jpg?width=600",
+      options: ["Spotted Grunter", "Kabeljou / Kob", "Garrick", "Steenbras"]
+    }
+  ];
+
+  let currentIndex = 0;
+  let score = 0;
+
+  function loadCard() {
+    const card = deck[currentIndex];
+    document.getElementById("progress-text").innerText = `Fish ${currentIndex + 1} of ${deck.length}`;
+    document.getElementById("habitat-badge").innerText = card.habitat;
+    document.getElementById("fish-img").src = card.image;
+    document.getElementById("feedback").innerText = "";
+    document.getElementById("next-btn").style.display = "none";
+
+    const container = document.getElementById("options-container");
+    container.innerHTML = "";
+
+    card.options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "choice-btn";
+      btn.innerText = opt;
+      btn.onclick = () => selectAnswer(btn, opt, card.name);
+      container.appendChild(btn);
+    });
+  }
+
+  function selectAnswer(selectedBtn, chosenName, correctName) {
+    const buttons = document.querySelectorAll(".choice-btn");
+    buttons.forEach(btn => btn.disabled = true);
+
+    const feedback = document.getElementById("feedback");
+
+    if (chosenName === correctName) {
+      selectedBtn.classList.add("correct");
+      feedback.innerText = "✓ Correct!";
+      feedback.style.color = "#15803d";
+      score++;
+      if (navigator.vibrate) navigator.vibrate(80);
+    } else {
+      selectedBtn.classList.add("wrong");
+      feedback.innerText = `✕ That is a ${correctName}`;
+      feedback.style.color = "#b91c1c";
+      buttons.forEach(btn => {
+        if (btn.innerText === correctName) btn.classList.add("correct");
+      });
+      if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
+    }
+
+    const nextBtn = document.getElementById("next-btn");
+    nextBtn.style.display = "block";
+    if (currentIndex === deck.length - 1) {
+      nextBtn.innerText = "See Results →";
+    }
+  }
+
+  function nextCard() {
+    currentIndex++;
+    if (currentIndex < deck.length) {
+      loadCard();
+    } else {
+      showSummary();
+    }
+  }
+
+  function showSummary() {
+    const container = document.getElementById("game-container");
+    container.innerHTML = `
+      <div style="text-align: center; padding: 30px 10px;">
+        <h1 style="font-size: 2.2rem; margin-bottom: 20px;">Well Done!</h1>
+        <p style="font-size: 1.6rem; margin-bottom: 30px; font-weight: bold;">
+          Score: ${score} out of ${deck.length}
+        </p>
+        <button onclick="location.reload()" class="choice-btn" style="width: 100%; background: #0284c7; color: white; border: none;">
+          Play Again ↺
+        </button>
+      </div>
+    `;
+  }
+
+  loadCard();
+</script>
+</body>
+</html>
