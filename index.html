@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Southern African Fish Quiz</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="theme-color" content="#0284c7">
   <style>
     * {
       box-sizing: border-box;
@@ -16,6 +20,8 @@
       color: #0f172a;
       display: flex;
       justify-content: center;
+      align-items: center;
+      min-height: 100vh;
       padding: 12px;
     }
     #game-container {
@@ -47,12 +53,30 @@
       border-radius: 16px;
       overflow: hidden;
       border: 3px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .img-box img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
+    }
+    .img-box .img-placeholder {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #475569;
+      text-align: center;
+      padding: 16px;
+    }
+    .photo-credit {
+      font-size: 0.75rem;
+      color: #64748b;
+      text-align: right;
+    }
+    .photo-credit a {
+      color: #64748b;
     }
     .question-prompt {
       font-size: 1.4rem;
@@ -103,6 +127,15 @@
       border-radius: 14px;
       cursor: pointer;
     }
+    footer {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      text-align: center;
+      margin-top: 8px;
+    }
+    footer a {
+      color: #94a3b8;
+    }
   </style>
 </head>
 <body>
@@ -113,9 +146,10 @@
     <span id="habitat-badge" class="badge">Inland</span>
   </div>
 
-  <div class="img-box">
-    <img id="fish-img" src="" alt="Fish photo" referrerpolicy="no-referrer">
+  <div class="img-box" id="img-box">
+    <img id="fish-img" src="" alt="Fish photo" referrerpolicy="no-referrer" style="display:none;">
   </div>
+  <div class="photo-credit" id="photo-credit"></div>
 
   <div class="question-prompt">What fish is this?</div>
 
@@ -124,6 +158,12 @@
   <div id="feedback"></div>
 
   <button id="next-btn" onclick="nextCard()">Next Fish →</button>
+
+  <footer>
+    Fish photos © their respective photographers, via
+    <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>,
+    used under CC BY / CC BY-SA / public domain / free-use licenses. See each photo's credit link above.
+  </footer>
 </div>
 
 <script>
@@ -131,56 +171,227 @@
     {
       name: "Tigerfish",
       habitat: "🏞️ Inland Freshwater",
-      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Hydrocynus_vittatus_15808090.jpg?width=600",
-      options: ["Tigerfish", "Galjoen", "Tilapia", "Carp"]
+      image: "images/tigerfish.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Hydrocynus_vittatus_15808090.jpg?width=600",
+      credit: { author: "Andrew Deacon", license: "CC0", url: "https://commons.wikimedia.org/wiki/File:Hydrocynus_vittatus_15808090.jpg" }
     },
     {
       name: "Galjoen",
       habitat: "🌊 Ocean Coastal",
-      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Galjoen_(Dichistius_capensis).jpg?width=600",
-      options: ["Galjoen", "Snoek", "Blacktail", "Yellowtail"]
+      image: "images/galjoen.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Galjoen_(Dichistius_capensis).jpg?width=600",
+      credit: { author: "Brian Gratwicke", license: "CC BY 2.0", url: "https://commons.wikimedia.org/wiki/File:Galjoen_(Dichistius_capensis).jpg" }
     },
     {
       name: "Snoek",
       habitat: "🌊 Ocean Pelagic",
-      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Thyrsites_atun,_Barracouta_or_snake_Mackerel.jpg?width=600",
-      options: ["Snoek", "Kingklip", "Barracuda", "Hake"]
+      image: "images/snoek.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Thyrsites_atun,_Barracouta_or_snake_Mackerel.jpg?width=600",
+      credit: { author: "Brian Gratwicke", license: "CC BY 2.0", url: "https://commons.wikimedia.org/wiki/File:Thyrsites_atun,_Barracouta_or_snake_Mackerel.jpg" }
     },
     {
-      name: "Sharptooth Catfish (Barbel)",
+      name: "Sharptooth Catfish",
       habitat: "🏞️ Inland Freshwater",
-      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Clarias_gariepinus,_African_sharptooth_catfish.jpg?width=600",
-      options: ["Sharptooth Catfish", "Tigerfish", "Mudfish", "Vundu"]
+      image: "images/catfish.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Clarias_gariepinus,_African_sharptooth_catfish.jpg?width=600",
+      credit: { author: "Zahara5555", license: "CC BY-SA 4.0", url: "https://commons.wikimedia.org/wiki/File:Clarias_gariepinus,_African_sharptooth_catfish.jpg" }
     },
     {
       name: "Red Roman",
       habitat: "🌊 Ocean Reef",
-      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Roman_Chrysoblephus_laticeps_DSC02776.JPG?width=600",
-      options: ["Red Roman", "Cape Salmon", "Galjoen", "Red Stumpnose"]
+      image: "images/redroman.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Roman_Chrysoblephus_laticeps_DSC02776.JPG?width=600",
+      credit: { author: "Peter Southwood", license: "CC BY-SA 3.0", url: "https://commons.wikimedia.org/wiki/File:Roman_Chrysoblephus_laticeps_DSC02776.JPG" }
     },
     {
       name: "Spotted Grunter",
       habitat: "🌊 Estuary & Ocean",
-      image: "https://commons.wikimedia.org/wiki/Special:FilePath/Pomadasys_commersonnii,_Breede_river_mouth.jpg?width=600",
-      options: ["Spotted Grunter", "Kabeljou / Kob", "Garrick", "Steenbras"]
+      image: "images/grunter.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Pomadasys_commersonnii,_Breede_river_mouth.jpg?width=600",
+      credit: { author: "Craig Thom", license: "CC BY-SA 3.0", url: "https://commons.wikimedia.org/wiki/File:Pomadasys_commersonnii,_Breede_river_mouth.jpg" }
+    },
+    {
+      name: "Largemouth Yellowfish",
+      habitat: "🏞️ Inland Freshwater",
+      image: "images/yellowfish.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Largemouth_yellowfish_(Labeobarbus_kimberleyensis)_1.jpg?width=600",
+      credit: { author: "Mahomed Desai", license: "CC BY 4.0", url: "https://commons.wikimedia.org/wiki/File:Largemouth_yellowfish_(Labeobarbus_kimberleyensis)_1.jpg" }
+    },
+    {
+      name: "Mozambique Tilapia",
+      habitat: "🏞️ Inland Freshwater",
+      image: "images/tilapia.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Oreochromis_mossambicus_Downfall_Creek_7th_Brigade_Park_Chermside_IMGP1676.jpg?width=600",
+      credit: { author: "John Robert McPherson", license: "CC BY-SA 4.0", url: "https://commons.wikimedia.org/wiki/File:Oreochromis_mossambicus_Downfall_Creek_7th_Brigade_Park_Chermside_IMGP1676.jpg" }
+    },
+    {
+      name: "Largemouth Bass",
+      habitat: "🏞️ Inland Freshwater",
+      image: "images/bass.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Micropterus_salmoides_589442040.jpg?width=600",
+      credit: { author: "sisor", license: "CC BY 4.0", url: "https://commons.wikimedia.org/wiki/File:Micropterus_salmoides_589442040.jpg" }
+    },
+    {
+      name: "Vundu",
+      habitat: "🏞️ Inland Freshwater",
+      image: "images/vundu.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Heterobranchus_longifilis.jpg?width=600",
+      credit: { author: "Cuvier & Valenciennes", license: "Public domain", url: "https://commons.wikimedia.org/wiki/File:Heterobranchus_longifilis.jpg" }
+    },
+    {
+      name: "Yellowtail",
+      habitat: "🌊 Ocean Pelagic",
+      image: "images/yellowtail.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Seriola_lalandi.jpg?width=600",
+      credit: { author: "A. R. Mc Culloch", license: "Public domain", url: "https://commons.wikimedia.org/wiki/File:Seriola_lalandi.jpg" }
+    },
+    {
+      name: "Kingklip",
+      habitat: "🌊 Ocean Deep",
+      image: "images/kingklip.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Genypterus_capensis,_by_vismark_in_Pretoria,_a.jpg?width=600",
+      credit: { author: "JMK", license: "CC BY-SA 4.0", url: "https://commons.wikimedia.org/wiki/File:Genypterus_capensis,_by_vismark_in_Pretoria,_a.jpg" }
+    },
+    {
+      name: "Cape Salmon",
+      habitat: "🌊 Ocean Pelagic",
+      image: "images/capesalmon.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Atractoscion_aequidens.jpg?width=600",
+      credit: { author: "Andrew Smith", license: "Public domain", url: "https://commons.wikimedia.org/wiki/File:Atractoscion_aequidens.jpg" }
+    },
+    {
+      name: "Blacktail",
+      habitat: "🌊 Ocean Reef",
+      image: "images/blacktail.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Cape_White_Seabream_(Diplodus_capensis)_01.jpg?width=600",
+      credit: { author: "Bernard DUPONT", license: "CC BY-SA 2.0", url: "https://commons.wikimedia.org/wiki/File:Cape_White_Seabream_(Diplodus_capensis)_01.jpg" }
+    },
+    {
+      name: "Elf (Shad)",
+      habitat: "🌊 Ocean Coastal",
+      image: "images/elf.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Tailor_(Pomatomus_saltatrix)_1.jpg?width=600",
+      credit: { author: "JaredMcKenzie", license: "CC0", url: "https://commons.wikimedia.org/wiki/File:Tailor_(Pomatomus_saltatrix)_1.jpg" }
+    },
+    {
+      name: "White Steenbras",
+      habitat: "🌊 Estuary & Ocean",
+      image: "images/steenbras.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Lithognathus_lithognathus.jpg?width=600",
+      credit: { author: "F. H. Van der Bank, Univ. of Johannesburg", license: "Free use", url: "https://commons.wikimedia.org/wiki/File:Lithognathus_lithognathus.jpg" }
+    },
+    {
+      name: "Garrick",
+      habitat: "🌊 Ocean Coastal",
+      image: "images/garrick.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Lichia_amia.jpg?width=600",
+      credit: { author: "F. H. Van der Bank, Univ. of Johannesburg", license: "Free use", url: "https://commons.wikimedia.org/wiki/File:Lichia_amia.jpg" }
+    },
+    {
+      name: "Silver Kob",
+      habitat: "🌊 Estuary & Ocean",
+      image: "images/kob.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Argyrosomus_japonicus.JPG?width=600",
+      credit: { author: "Show_ryu", license: "CC BY-SA 3.0", url: "https://commons.wikimedia.org/wiki/File:Argyrosomus_japonicus.JPG" }
+    },
+    {
+      name: "Cape Stumpnose",
+      habitat: "🌊 Estuary",
+      image: "images/stumpnose.jpg",
+      fallback: "https://commons.wikimedia.org/wiki/Special:FilePath/Two_Oceans_Aquarium_-_2018-07-19_-_Andy_Mabbett_-_Rhabdosargus_holubi.jpg?width=600",
+      credit: { author: "Andy Mabbett", license: "CC BY-SA 4.0", url: "https://commons.wikimedia.org/wiki/File:Two_Oceans_Aquarium_-_2018-07-19_-_Andy_Mabbett_-_Rhabdosargus_holubi.jpg" }
     }
   ];
+
+  // Shuffle the deck order each time the page loads.
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  const playDeck = shuffle(deck);
 
   let currentIndex = 0;
   let score = 0;
 
+  // Keep references to preloaded Image objects so browsers don't garbage-collect
+  // them before the <img> tag actually needs the decoded bitmap.
+  const preloadedImages = [];
+
+  function preloadCard(card) {
+    const primary = new Image();
+    primary.src = card.image;
+    preloadedImages.push(primary);
+
+    primary.onerror = () => {
+      const fallback = new Image();
+      fallback.src = card.fallback;
+      preloadedImages.push(fallback);
+    };
+  }
+
+  playDeck.forEach(preloadCard);
+
+  // Build a multiple-choice option list: the correct name plus three random
+  // distractors drawn from the rest of the deck, reshuffled each load.
+  function buildOptions(correctCard) {
+    const others = deck.filter(c => c.name !== correctCard.name);
+    const distractors = shuffle(others).slice(0, 3).map(c => c.name);
+    return shuffle([correctCard.name, ...distractors]);
+  }
+
+  function setImage(card) {
+    const img = document.getElementById("fish-img");
+    const box = document.getElementById("img-box");
+    const existingPlaceholder = box.querySelector(".img-placeholder");
+    if (existingPlaceholder) existingPlaceholder.remove();
+
+    img.style.display = "none";
+    img.onerror = null;
+
+    img.onload = () => {
+      img.style.display = "block";
+    };
+
+    img.onerror = () => {
+      // Local photo failed to load — try the Wikimedia Commons hotlink.
+      img.onerror = () => {
+        // Hotlink also failed — show a friendly placeholder, never a broken-image icon.
+        img.style.display = "none";
+        const placeholder = document.createElement("div");
+        placeholder.className = "img-placeholder";
+        placeholder.textContent = "📷 Photo coming soon";
+        box.appendChild(placeholder);
+      };
+      img.src = card.fallback;
+    };
+
+    img.src = card.image;
+  }
+
+  function setCredit(card) {
+    const credit = document.getElementById("photo-credit");
+    credit.innerHTML = `Photo: ${card.credit.author} (${card.credit.license}) · <a href="${card.credit.url}" target="_blank" rel="noopener">Wikimedia Commons</a>`;
+  }
+
   function loadCard() {
-    const card = deck[currentIndex];
-    document.getElementById("progress-text").innerText = `Fish ${currentIndex + 1} of ${deck.length}`;
+    const card = playDeck[currentIndex];
+    document.getElementById("progress-text").innerText = `Fish ${currentIndex + 1} of ${playDeck.length}`;
     document.getElementById("habitat-badge").innerText = card.habitat;
-    document.getElementById("fish-img").src = card.image;
+    setImage(card);
+    setCredit(card);
     document.getElementById("feedback").innerText = "";
     document.getElementById("next-btn").style.display = "none";
 
     const container = document.getElementById("options-container");
     container.innerHTML = "";
 
-    card.options.forEach(opt => {
+    const options = buildOptions(card);
+    options.forEach(opt => {
       const btn = document.createElement("button");
       btn.className = "choice-btn";
       btn.innerText = opt;
@@ -213,14 +424,14 @@
 
     const nextBtn = document.getElementById("next-btn");
     nextBtn.style.display = "block";
-    if (currentIndex === deck.length - 1) {
+    if (currentIndex === playDeck.length - 1) {
       nextBtn.innerText = "See Results →";
     }
   }
 
   function nextCard() {
     currentIndex++;
-    if (currentIndex < deck.length) {
+    if (currentIndex < playDeck.length) {
       loadCard();
     } else {
       showSummary();
@@ -233,7 +444,7 @@
       <div style="text-align: center; padding: 30px 10px;">
         <h1 style="font-size: 2.2rem; margin-bottom: 20px;">Well Done!</h1>
         <p style="font-size: 1.6rem; margin-bottom: 30px; font-weight: bold;">
-          Score: ${score} out of ${deck.length}
+          Score: ${score} out of ${playDeck.length}
         </p>
         <button onclick="location.reload()" class="choice-btn" style="width: 100%; background: #0284c7; color: white; border: none;">
           Play Again ↺
